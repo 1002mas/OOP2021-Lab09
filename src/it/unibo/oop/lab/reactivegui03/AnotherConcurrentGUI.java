@@ -1,4 +1,4 @@
-package it.unibo.oop.lab.reactivegui02;
+package it.unibo.oop.lab.reactivegui03;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -13,7 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-public final class ConcurrentGUI extends JFrame {
+public final class AnotherConcurrentGUI extends JFrame {
     /**
      * 
      */
@@ -22,8 +22,10 @@ public final class ConcurrentGUI extends JFrame {
     private static final double HEIGHT_PERC = 0.1;
 
     private final JLabel counterLabel;
-
-    public ConcurrentGUI() {
+    private final JButton bUp;
+    private final JButton bDown;
+    private final JButton bStop;
+    public AnotherConcurrentGUI() {
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize((int) (screenSize.getWidth() * WIDTH_PERC), (int) (screenSize.getHeight() * HEIGHT_PERC));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,17 +34,22 @@ public final class ConcurrentGUI extends JFrame {
         counterLabel = new JLabel();
         counterLabel.setText("0");
         mainPanel.add(counterLabel);
-        final JButton bUp = new JButton("up");
+        bUp = new JButton("up");
         mainPanel.add(bUp);
-        final JButton bDown = new JButton("down");
+        bDown = new JButton("down");
         mainPanel.add(bDown);
-        final JButton bStop = new JButton("stop");
+        bStop = new JButton("stop");
         mainPanel.add(bStop);
         /*
          * agent created (counter)
          */
         final Agent agent = new Agent();
         new Thread(agent).start();
+        /*
+         * agent stopper (counter)
+         */
+        final AgentStopper agentStopper = new AgentStopper(agent);
+        new Thread(agentStopper).start();
         /*
          * Action Listeners
          */
@@ -83,7 +90,7 @@ public final class ConcurrentGUI extends JFrame {
                     SwingUtilities.invokeAndWait(new Runnable() {
                         @Override
                         public void run() {
-                            ConcurrentGUI.this.counterLabel.setText(Integer.toString(Agent.this.counter));
+                            AnotherConcurrentGUI.this.counterLabel.setText(Integer.toString(Agent.this.counter));
                         }
                     });
                     if (dec) {
@@ -111,6 +118,36 @@ public final class ConcurrentGUI extends JFrame {
 
         public void stopCounting() {
             this.stop = true;
+        }
+    }
+
+    private class AgentStopper implements Runnable {
+        private final Agent agente;
+
+        public AgentStopper(final Agent agente) {
+            this.agente = agente;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(10_000);
+                agente.stopCounting();
+                try {
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        @Override
+                        public void run() {
+                            AnotherConcurrentGUI.this.bUp.setEnabled(false);
+                            AnotherConcurrentGUI.this.bDown.setEnabled(false);
+                            AnotherConcurrentGUI.this.bStop.setEnabled(false);
+                        }
+                    });
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }
