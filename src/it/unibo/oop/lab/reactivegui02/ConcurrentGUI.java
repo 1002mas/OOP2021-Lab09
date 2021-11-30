@@ -74,16 +74,17 @@ public final class ConcurrentGUI extends JFrame {
     private class Agent implements Runnable {
         private volatile boolean stop;
         private volatile boolean dec;
-        private volatile int counter;
+        private int counter;
 
         @Override
         public void run() {
             while (!this.stop) {
                 try {
+                    final String textToDisplay = String.valueOf(counter);
                     SwingUtilities.invokeAndWait(new Runnable() {
                         @Override
                         public void run() {
-                            ConcurrentGUI.this.counterLabel.setText(Integer.toString(Agent.this.counter));
+                            ConcurrentGUI.this.counterLabel.setText(textToDisplay);
                         }
                     });
                     if (dec) {
