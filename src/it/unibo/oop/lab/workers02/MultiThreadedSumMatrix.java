@@ -6,7 +6,14 @@ import java.util.List;
 public class MultiThreadedSumMatrix implements SumMatrix {
     private final int threadsNumber;
 
+    /*
+     * @param n Number of threads
+     * @throws IllegalArgumentException
+     * */
     public MultiThreadedSumMatrix(final int n) {
+        if (n < 1) {
+            throw new IllegalArgumentException();
+        }
         threadsNumber = n;
     }
 
